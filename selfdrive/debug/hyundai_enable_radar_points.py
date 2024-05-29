@@ -69,6 +69,10 @@ SUPPORTED_FW_VERSIONS = {
   b"DLhe SCC FHCUP      1.00 1.02 99110-L7000 \x01 \x102    ": ConfigValues(
     default_config=b"\x00\x00\x00\x01\x00\x00",
     tracks_enabled=b"\x00\x00\x00\x01\x00\x01"),
+  # 2020 IONIQ
+  b"\xf1\x00AEev SCC FHCUP      1.00 1.01 99110-G7100         ": ConfigValues(
+    default_config=b"\x00\x00\x00\x01\x00\x00",
+    tracks_enabled=b"\x00\x00\x00\x01\x00\x01"),
 }
 
 if __name__ == "__main__":
@@ -113,6 +117,8 @@ if __name__ == "__main__":
   config_values = SUPPORTED_FW_VERSIONS[fw_version]
   new_config = config_values.default_config if args.default else config_values.tracks_enabled
   print(f"current config: 0x{current_config.hex()}")
+  #Exit for now, just getting current config.
+  sys.exit(1)
   if current_config != new_config:
     print("[CHANGE CONFIGURATION]")
     print(f"new config:     0x{new_config.hex()}")
