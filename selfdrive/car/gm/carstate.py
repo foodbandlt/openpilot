@@ -26,6 +26,7 @@ class CarState(CarStateBase):
     self.pt_lka_steering_cmd_counter = 0
     self.cam_lka_steering_cmd_counter = 0
     self.buttons_counter = 0
+    self.lkas_status_temp_error = False
 
     self.prev_distance_button = 0
     self.distance_button = 0
@@ -110,7 +111,19 @@ class CarState(CarStateBase):
 
     # 0 inactive, 1 active, 2 temporarily limited, 3 failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
-    ret.steerFaultTemporary = self.lkas_status == 2
+
+    # LKA Cmd Active is going true from false
+    # GM seems to ignore LKASteeringCmdActive perpetually if it goes high while the car
+    # is still winding down from it going low.  Trigger temp steer fault until resolved
+    if self.loopback_lka_steering_cmd_ts_nanos < pt_cp.ts_nanos["PSCMStatus"]["LKATorqueDeliveredStatus"] and \
+      loopback_cp.vl["ASCMLKASteeringCmd"]["LKASteeringCmdActive"] == 0 and self.lkas_status != 0:
+      self.lkas_status_temp_error = True
+
+    # latch the temp error until lkas_status goes to 0
+    if self.lkas_status_temp_error and self.lkas_status == 0:
+      self.lkas_status_temp_error = False
+
+    ret.steerFaultTemporary = self.lkas_status == 2 or self.lkas_status_temp_error
     ret.steerFaultPermanent = self.lkas_status == 3
 
     if self.CP.carFingerprint not in SDGM_CAR:
