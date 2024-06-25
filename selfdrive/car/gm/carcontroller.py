@@ -39,7 +39,6 @@ class CarController(CarControllerBase):
     self.frame = 0
     self.last_steer_frame = 0
     self.last_button_frame = 0
-    self.last_lat_active_send = False
     self.cancel_counter = 0
     self.pedal_steady = 0.
 
@@ -113,18 +112,10 @@ class CarController(CarControllerBase):
       else:
         apply_steer = 0
 
-      # GM seems to ignore LKASteeringCmdActive perpetually if it goes high while the car
-      # is still winding down from it going low.  Take it low for a frame to fix
-      if self.last_lat_active_send and CS.lkas_status == 0:
-        lat_active_send = False
-      else:
-        lat_active_send = CC.latActive
-
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
-      self.last_lat_active_send = lat_active_send
       idx = self.lka_steering_cmd_counter % 4
-      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, lat_active_send ))
+      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
